@@ -1,5 +1,10 @@
 type InputNum = number | [InputNum, InputNum];
-type SnailNumPair = { type: "pair"; left: SnailNum; right: SnailNum; parent: SnailNumPair | null };
+type SnailNumPair = {
+  type: "pair";
+  left: SnailNum;
+  right: SnailNum;
+  parent: SnailNumPair | null;
+};
 type SnailNumNum = { type: "num"; value: number; parent: SnailNumPair | null };
 type SnailNum = SnailNumPair | SnailNumNum;
 
