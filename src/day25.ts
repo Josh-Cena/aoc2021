@@ -2,7 +2,10 @@ function moveEast(mat: string[][]) {
   const newMat = mat.map((line) => line.slice());
   for (let row = 0; row < mat.length; row++) {
     for (let col = 0; col < mat[0].length; col++) {
-      if (mat[row][col] === ">" && mat[row][(col + 1) % mat[0].length] === ".") {
+      if (
+        mat[row][col] === ">" &&
+        mat[row][(col + 1) % mat[0].length] === "."
+      ) {
         newMat[row][(col + 1) % mat[0].length] = ">";
         newMat[row][col] = ".";
       }
