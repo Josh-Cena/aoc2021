@@ -12,7 +12,11 @@ function serialize(rooms: number[][], hallway: (number | undefined)[]) {
   );
 }
 
-function move(startRooms: number[][], startHallway: (number | undefined)[], roomSize: number) {
+function move(
+  startRooms: number[][],
+  startHallway: (number | undefined)[],
+  roomSize: number,
+) {
   let bestEnergy = Infinity;
 
   const stack: State[] = [
@@ -140,7 +144,12 @@ export function solve1(data: string[]): void {
 }
 
 export function solve2(data: string[]): void {
-  const extra = [[3, 3], [2, 1], [1, 0], [0, 2]];
+  const extra = [
+    [3, 3],
+    [2, 1],
+    [1, 0],
+    [0, 2],
+  ];
   const rooms1 = data[2].match(/[A-D]/g)!;
   const rooms2 = data[3].match(/[A-D]/g)!;
   const rooms = rooms1.map((room, i) => [
