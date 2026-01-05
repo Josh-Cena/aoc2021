@@ -80,33 +80,48 @@ export function solve2(data: string[]): void {
   // which is about 2M states -- reasonable.
   // Note, at the very least, every player's score increases by 1, so the game
   // always ends after at most 42 turns.
-  const states = Array.from({ length: 11 }, () =>
+  let states = Array.from({ length: 11 }, () =>
     Array.from({ length: 11 }, () =>
       Array.from({ length: 22 }, () =>
-        Array.from({ length: 22 }, () => Array.from({ length: 43 }, () => 0)),
+        Array.from({ length: 22 }, () => 0),
       ),
     ),
   );
   // After the 0th turn, both are at starting position with no score
-  states[player1][player2][0][0][0] = 1;
+  states[player1][player2][0][0] = 1;
+  let player1Wins = 0;
+  let player2Wins = 0;
   for (let turn = 0; turn < 42; turn++) {
+    const newStates = Array.from({ length: 11 }, () =>
+      Array.from({ length: 11 }, () =>
+        Array.from({ length: 22 }, () =>
+          Array.from({ length: 22 }, () => 0),
+        ),
+      ),
+    );
     for (let p1Pos = 1; p1Pos <= 10; p1Pos++) {
       for (let p1Score = 0; p1Score < 21; p1Score++) {
         for (let p2Pos = 1; p2Pos <= 10; p2Pos++) {
           for (let p2Score = 0; p2Score < 21; p2Score++) {
-            const count = states[p1Pos][p2Pos][p1Score][p2Score][turn];
-            const newTurn = turn + 1;
-            if (count > 0) {
-              for (const [roll, freq] of rolls) {
-                if (turn % 2 === 0) {
-                  const newP1Pos = ((p1Pos + roll - 1) % 10) + 1;
-                  const newP1Score = Math.min(p1Score + newP1Pos, 21);
-                  states[newP1Pos][p2Pos][newP1Score][p2Score][newTurn] +=
-                    count * freq;
+            const count = states[p1Pos][p2Pos][p1Score][p2Score];
+            if (count === 0) continue;
+            for (const [roll, freq] of rolls) {
+              if (turn % 2 === 0) {
+                const newP1Pos = ((p1Pos + roll - 1) % 10) + 1;
+                const newP1Score = p1Score + newP1Pos;
+                if (newP1Score >= 21) {
+                  player1Wins += count * freq;
                 } else {
-                  const newP2Pos = ((p2Pos + roll - 1) % 10) + 1;
-                  const newP2Score = Math.min(p2Score + newP2Pos, 21);
-                  states[p1Pos][newP2Pos][p1Score][newP2Score][newTurn] +=
+                  newStates[newP1Pos][p2Pos][newP1Score][p2Score] +=
+                    count * freq;
+                }
+              } else {
+                const newP2Pos = ((p2Pos + roll - 1) % 10) + 1;
+                const newP2Score = p2Score + newP2Pos;
+                if (newP2Score >= 21) {
+                  player2Wins += count * freq;
+                } else {
+                  newStates[p1Pos][newP2Pos][p1Score][newP2Score] +=
                     count * freq;
                 }
               }
@@ -115,22 +130,7 @@ export function solve2(data: string[]): void {
         }
       }
     }
-  }
-
-  let player1Wins = 0;
-  let player2Wins = 0;
-  for (let loserScore = 1; loserScore < 21; loserScore++) {
-    for (let p1Pos = 1; p1Pos <= 10; p1Pos++) {
-      for (let p2Pos = 1; p2Pos <= 10; p2Pos++) {
-        for (let turn = 0; turn < 42; turn++) {
-          if (turn % 2 === 0) {
-            player2Wins += states[p1Pos][p2Pos][loserScore][21][turn];
-          } else {
-            player1Wins += states[p1Pos][p2Pos][21][loserScore][turn];
-          }
-        }
-      }
-    }
+    states = newStates;
   }
 
   console.log(Math.max(player1Wins, player2Wins));

@@ -5,8 +5,7 @@ export function solve1(data: string[]): void {
     /target area: x=(-?\d+)..(-?\d+), y=(-?\d+)..(-?\d+)/,
   );
   if (!match) {
-    console.log("Invalid input");
-    return;
+    throw new Error("Invalid input");
   }
   const yMin = parseInt(match[3], 10);
   const maxVy = -yMin - 1;
@@ -27,14 +26,12 @@ function validTRangeForY(
   yMin: number,
   yMax: number,
 ): [number, number] | null {
-  const dMax = Math.sqrt((2 * vy0 + 1) ** 2 - 8 * yMax);
   const dMin = Math.sqrt((2 * vy0 + 1) ** 2 - 8 * yMin);
-  const tMin = Math.ceil((2 * vy0 + 1 + dMax) / 2);
-  const tMax = Math.floor((2 * vy0 + 1 + dMin) / 2);
-  if (tMin > tMax) {
-    return null;
-  }
-  return [tMin, tMax];
+  const t4 = Math.floor((2 * vy0 + 1 + dMin) / 2);
+  const dMax = Math.sqrt((2 * vy0 + 1) ** 2 - 8 * yMax);
+  const t3 = Math.ceil((2 * vy0 + 1 + dMax) / 2);
+  if (t3 > t4) return null;
+  return [t3, t4];
 }
 
 // x position = vx0*(vx0+1)/2 if t >= vx0 else (2*vx0-t+1)*t/2
@@ -57,13 +54,12 @@ function validTRangeForX(
 ): [number, number] | null {
   const dMin = Math.sqrt((2 * vx0 + 1) ** 2 - 8 * xMin);
   if (Number.isNaN(dMin)) return null;
-  const tMinFromMin = Math.ceil((2 * vx0 + 1 - dMin) / 2);
+  const t1 = Math.ceil((2 * vx0 + 1 - dMin) / 2);
   const dMax = Math.sqrt((2 * vx0 + 1) ** 2 - 8 * xMax);
-  if (Number.isNaN(dMax)) {
-    return [tMinFromMin, Infinity];
-  }
-  const tMaxFromMax = Math.floor((2 * vx0 + 1 - dMax) / 2);
-  return [tMinFromMin, tMaxFromMax];
+  if (Number.isNaN(dMax)) return [t1, Infinity];
+  const t2 = Math.floor((2 * vx0 + 1 - dMax) / 2);
+  if (t2 > vx0) return [t1, Infinity];
+  return [t1, t2];
 }
 
 // Already have max(vy0). min(vy0) is yMin (goes there in one step).
@@ -74,8 +70,7 @@ export function solve2(data: string[]): void {
     /target area: x=(-?\d+)..(-?\d+), y=(-?\d+)..(-?\d+)/,
   );
   if (!match) {
-    console.log("Invalid input");
-    return;
+    throw new Error("Invalid input");
   }
   const xMin = parseInt(match[1], 10);
   const xMax = parseInt(match[2], 10);

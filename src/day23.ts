@@ -1,7 +1,11 @@
+import {
+  MinPriorityQueue,
+  type PriorityQueueItem,
+} from "@datastructures-js/priority-queue";
+
 type State = {
   rooms: number[][];
   hallway: (number | undefined)[];
-  energy: number;
 };
 
 function serialize(rooms: number[][], hallway: (number | undefined)[]) {
@@ -12,28 +16,92 @@ function serialize(rooms: number[][], hallway: (number | undefined)[]) {
   );
 }
 
+function* nextStates(
+  rooms: number[][],
+  hallway: (number | undefined)[],
+  roomSize: number,
+) {
+  // Move one from room to hallway
+  for (let i = 0; i < rooms.length; i++) {
+    const room = rooms[i];
+
+    // Empty or already good
+    if (
+      room.length === 0 ||
+      (room.length === roomSize && room.every((p) => p === i))
+    )
+      continue;
+
+    const toMove = room[0];
+    const startingX = 2 + i * 2;
+    // Cost to enter the hallway
+    const baseCost = (roomSize + 1 - room.length) * 10 ** toMove;
+    let leftMost = startingX - 1;
+    while (leftMost >= 0 && hallway[leftMost] === undefined) leftMost--;
+
+    for (
+      let j = leftMost + 1;
+      j < hallway.length && hallway[j] === undefined;
+      j++
+    ) {
+      // Directly in front of a room
+      if ([2, 4, 6, 8].includes(j)) continue;
+
+      const newRooms = [...rooms];
+      newRooms[i] = room.slice(1);
+      const newHallway = [...hallway];
+      newHallway[j] = toMove;
+      yield {
+        rooms: newRooms,
+        hallway: newHallway,
+        cost: Math.abs(startingX - j) * 10 ** toMove + baseCost,
+      };
+    }
+  }
+
+  // Move one from hallway to room
+  for (let i = 0; i < hallway.length; i++) {
+    const pod = hallway[i];
+    if (pod === undefined) continue;
+    const targetX = 2 + pod * 2;
+    // Blocked
+    if (
+      (targetX < i && hallway.slice(targetX, i).some((p) => p !== undefined)) ||
+      (targetX > i &&
+        hallway.slice(i + 1, targetX + 1).some((p) => p !== undefined))
+    )
+      continue;
+
+    const room = rooms[pod];
+    if (room.some((p) => p !== pod)) continue;
+
+    const newRooms = [...rooms];
+    newRooms[pod] = [pod, ...room];
+    const newHallway = [...hallway];
+    newHallway[i] = undefined;
+    yield {
+      rooms: newRooms,
+      hallway: newHallway,
+      cost: (Math.abs(i - targetX) + (roomSize - room.length)) * 10 ** pod,
+    };
+  }
+}
+
 function move(
   startRooms: number[][],
   startHallway: (number | undefined)[],
   roomSize: number,
 ) {
-  let bestEnergy = Infinity;
+  const costs = new Map<string, number>();
+  costs.set(serialize(startRooms, startHallway), 0);
+  const pq = new MinPriorityQueue<State>();
+  pq.enqueue({ rooms: startRooms, hallway: startHallway }, 0);
 
-  const stack: State[] = [
-    { rooms: startRooms, hallway: startHallway, energy: 0 },
-  ];
-
-  const seen = new Map<string, number>();
-
-  while (stack.length > 0) {
-    const { rooms, hallway, energy } = stack.pop()!;
-
-    if (energy >= bestEnergy) continue;
-
-    const key = serialize(rooms, hallway);
-    const prev = seen.get(key);
-    if (prev !== undefined && prev <= energy) continue;
-    seen.set(key, energy);
+  while (!pq.isEmpty()) {
+    const {
+      priority: energy,
+      element: { rooms, hallway },
+    } = pq.dequeue() as PriorityQueueItem<State>;
 
     // Every room is good
     if (
@@ -41,95 +109,23 @@ function move(
         (room, i) => room.length === roomSize && room.every((pod) => pod === i),
       )
     ) {
-      bestEnergy = Math.min(bestEnergy, energy);
-      continue;
+      return energy;
     }
 
-    // Move one from room to hallway
-    for (let i = 0; i < rooms.length; i++) {
-      const room = rooms[i];
-
-      // Empty or already good
-      if (
-        room.length === 0 ||
-        (room.length === roomSize && room.every((p) => p === i))
-      )
-        continue;
-
-      const toMove = room[0];
-      const startingX = 2 + i * 2;
-      // Cost to enter the hallway
-      const baseCost = (roomSize + 1 - room.length) * 10 ** toMove;
-
-      for (let j = startingX - 1; j >= 0 && hallway[j] === undefined; j--) {
-        // Directly in front of a room
-        if ([2, 4, 6, 8].includes(j)) continue;
-
-        const newRooms = [...rooms];
-        newRooms[i] = room.slice(1);
-        const newHallway = [...hallway];
-        newHallway[j] = toMove;
-
-        stack.push({
-          rooms: newRooms,
-          hallway: newHallway,
-          energy: energy + (startingX - j) * 10 ** toMove + baseCost,
-        });
+    for (const { rooms: newRooms, hallway: newHallway, cost } of nextStates(
+      rooms,
+      hallway,
+      roomSize,
+    )) {
+      const newEnergy = energy + cost;
+      const serialized = serialize(newRooms, newHallway);
+      if (!costs.has(serialized) || newEnergy < costs.get(serialized)!) {
+        costs.set(serialized, newEnergy);
+        pq.enqueue({ rooms: newRooms, hallway: newHallway }, newEnergy);
       }
-      for (
-        let j = startingX + 1;
-        j < hallway.length && hallway[j] === undefined;
-        j++
-      ) {
-        if ([2, 4, 6, 8].includes(j)) continue;
-
-        const newRooms = [...rooms];
-        newRooms[i] = room.slice(1);
-        const newHallway = [...hallway];
-        newHallway[j] = toMove;
-
-        stack.push({
-          rooms: newRooms,
-          hallway: newHallway,
-          energy: energy + (j - startingX) * 10 ** toMove + baseCost,
-        });
-      }
-    }
-
-    // Move one from hallway to room
-    for (let i = 0; i < hallway.length; i++) {
-      const pod = hallway[i];
-      if (pod === undefined) continue;
-      const targetX = 2 + pod * 2;
-      // Blocked
-      if (
-        (targetX < i &&
-          hallway.slice(targetX, i).some((p) => p !== undefined)) ||
-        (targetX > i &&
-          hallway.slice(i + 1, targetX + 1).some((p) => p !== undefined))
-      )
-        continue;
-
-      const room = rooms[pod];
-      if (room.some((p) => p !== pod)) continue;
-
-      const steps = Math.abs(i - targetX) + (roomSize - room.length);
-      const cost = steps * 10 ** pod;
-
-      const newRooms = [...rooms];
-      newRooms[pod] = [pod, ...room];
-      const newHallway = [...hallway];
-      newHallway[i] = undefined;
-
-      stack.push({
-        rooms: newRooms,
-        hallway: newHallway,
-        energy: energy + cost,
-      });
     }
   }
-
-  return bestEnergy;
+  throw new Error("No solution found");
 }
 
 export function solve1(data: string[]): void {
@@ -139,7 +135,7 @@ export function solve1(data: string[]): void {
     room.charCodeAt(0) - 65,
     rooms2[i].charCodeAt(0) - 65,
   ]);
-  const hallway = Array(11).fill(undefined);
+  const hallway: (number | undefined)[] = Array(11).fill(undefined);
   console.log(move(rooms, hallway, 2));
 }
 
@@ -157,6 +153,6 @@ export function solve2(data: string[]): void {
     ...extra[i],
     rooms2[i].charCodeAt(0) - 65,
   ]);
-  const hallway = Array(11).fill(undefined);
+  const hallway: (number | undefined)[] = Array(11).fill(undefined);
   console.log(move(rooms, hallway, 4));
 }

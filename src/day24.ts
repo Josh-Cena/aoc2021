@@ -6,13 +6,6 @@ function getConstraints(data: string[]): [number, number, number][] {
       Number(line.split(" ")[2]),
     );
   });
-  // console.log(
-  //   nVals
-  //     .map((ns) =>
-  //       ns.map((n, i) => `n${i} = ${n.toString().padStart(3)}`).join("    "),
-  //     )
-  //     .join("\n"),
-  // );
   const stack: [number, number][] = [];
   // Each constraint of the form w[i] - w[j] = n (i > j)
   const constraints: [number, number, number][] = [];
@@ -33,7 +26,6 @@ export function solve1(data: string[]) {
   const constraints = getConstraints(data);
   const optW = Array(14).fill(0);
   for (const [i, iPush, n] of constraints) {
-    // console.log(`w[${i}] - w[${iPush}] = ${n}`);
     optW[i] = Math.min(9, 9 + n);
     optW[iPush] = Math.min(9, 9 - n);
   }

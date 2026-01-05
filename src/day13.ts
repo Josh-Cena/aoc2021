@@ -22,34 +22,30 @@ function fold(
 }
 
 export function solve1(data: string[]): void {
-  const points: [number, number][] = [];
-  const folds: ["x" | "y", number][] = [];
-  for (const line of data) {
-    if (line.startsWith("fold along ")) {
-      const [axis, num] = line.slice(11).split("=");
-      folds.push([axis as "x" | "y", parseInt(num, 10)]);
-    } else if (line !== "") {
-      const [x, y] = line.split(",").map((n) => parseInt(n, 10));
-      points.push([x, y]);
-    }
-  }
+  const [part1, part2] = data.join("\n").split("\n\n");
+  const points = part1.split("\n").map((line) => {
+    const [x, y] = line.split(",").map((n) => parseInt(n, 10));
+    return [x, y] as [number, number];
+  });
+  const folds: ["x" | "y", number][] = part2.split("\n").map((line) => {
+    const [axis, num] = line.slice(11).split("=");
+    return [axis as "x" | "y", parseInt(num, 10)];
+  });
   const [axis, line] = folds[0];
   const foldedPoints = fold(points, axis, line);
   console.log(foldedPoints.length);
 }
 
 export function solve2(data: string[]): void {
-  const points: [number, number][] = [];
-  const folds: ["x" | "y", number][] = [];
-  for (const line of data) {
-    if (line.startsWith("fold along ")) {
-      const [axis, num] = line.slice(11).split("=");
-      folds.push([axis as "x" | "y", parseInt(num, 10)]);
-    } else if (line !== "") {
-      const [x, y] = line.split(",").map((n) => parseInt(n, 10));
-      points.push([x, y]);
-    }
-  }
+  const [part1, part2] = data.join("\n").split("\n\n");
+  const points = part1.split("\n").map((line) => {
+    const [x, y] = line.split(",").map((n) => parseInt(n, 10));
+    return [x, y] as [number, number];
+  });
+  const folds: ["x" | "y", number][] = part2.split("\n").map((line) => {
+    const [axis, num] = line.slice(11).split("=");
+    return [axis as "x" | "y", parseInt(num, 10)];
+  });
   let foldedPoints = points;
   for (const [axis, line] of folds) {
     foldedPoints = fold(foldedPoints, axis, line);

@@ -8,15 +8,15 @@ type SnailNumPair = {
 type SnailNumNum = { type: "num"; value: number; parent: SnailNumPair | null };
 type SnailNum = SnailNumPair | SnailNumNum;
 
-function buildSnailNum(obj: InputNum, parent: SnailNumPair | null): SnailNum {
+function buildSnailNum(obj: InputNum): SnailNum {
   if (typeof obj === "number") {
-    return { type: "num", value: obj, parent };
+    return { type: "num", value: obj, parent: null };
   }
   const pair: SnailNumPair = {
     type: "pair",
-    left: buildSnailNum(obj[0], null),
-    right: buildSnailNum(obj[1], null),
-    parent,
+    left: buildSnailNum(obj[0]),
+    right: buildSnailNum(obj[1]),
+    parent: null,
   };
   pair.left.parent = pair;
   pair.right.parent = pair;
@@ -120,9 +120,9 @@ function magnitude(a: SnailNum): number {
 export function solve1(data: string[]): void {
   const nums = data.map((line) => JSON.parse(line) as InputNum);
   const res = nums.slice(1).reduce((acc, curr) => {
-    const currNum = buildSnailNum(curr, null);
+    const currNum = buildSnailNum(curr);
     return add(acc, currNum);
-  }, buildSnailNum(nums[0], null));
+  }, buildSnailNum(nums[0]));
   console.log(magnitude(res));
 }
 
@@ -132,7 +132,7 @@ export function solve2(data: string[]): void {
   for (const a of nums) {
     for (const b of nums) {
       if (a === b) continue;
-      const sum = add(buildSnailNum(a, null), buildSnailNum(b, null));
+      const sum = add(buildSnailNum(a), buildSnailNum(b));
       const mag = magnitude(sum);
       if (mag > maxMag) {
         maxMag = mag;

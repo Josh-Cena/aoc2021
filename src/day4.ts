@@ -9,50 +9,34 @@ function play(data: string[]): number[] {
         line
           .trim()
           .split(/\s+/)
-          .map((n) => ({ number: parseInt(n, 10), marked: false })),
+          .map((n) => parseInt(n, 10)),
       );
       const mapping = new Map<number, [number, number]>();
       for (let r = 0; r < board.length; r++) {
         for (let c = 0; c < board[r].length; c++) {
-          mapping.set(board[r][c].number, [r, c]);
+          mapping.set(board[r][c], [r, c]);
         }
       }
-      return { board, mapping };
+      return {
+        mapping,
+        rowCount: Array(board.length).fill(0),
+        colCount: Array(board[0].length).fill(0),
+        boardSum: board.flat().reduce((a, b) => a + b, 0),
+      };
     });
   const scores: number[] = [];
   const won = new Set<number>();
   for (const n of seq) {
-    for (const [i, { board, mapping }] of boards.entries()) {
+    for (const [i, data] of boards.entries()) {
+      const { mapping, rowCount, colCount } = data;
       if (!mapping.has(n) || won.has(i)) continue;
       const [r, c] = mapping.get(n)!;
-      board[r][c].marked = true;
-      let isWon = false;
-      for (const row of board) {
-        if (row.every((cell) => cell.marked)) {
-          isWon = true;
-          break;
-        }
-      }
-      if (!isWon) {
-        for (let c = 0; c < board[0].length; c++) {
-          let allMarked = true;
-          for (let r = 0; r < board.length; r++) {
-            if (!board[r][c].marked) {
-              allMarked = false;
-              break;
-            }
-          }
-          if (allMarked) {
-            isWon = true;
-            break;
-          }
-        }
-      }
+      rowCount[r]++;
+      colCount[c]++;
+      data.boardSum -= n;
+      const isWon = rowCount[r] === 5 || colCount[c] === 5;
       if (isWon) {
-        const unmarkedSum = board
-          .flat()
-          .reduce((sum, cell) => (cell.marked ? sum : sum + cell.number), 0);
-        scores.push(unmarkedSum * n);
+        scores.push(data.boardSum * n);
         won.add(i);
       }
     }

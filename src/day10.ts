@@ -35,7 +35,6 @@ const completionScores = {
 export function solve1(data: string[]): void {
   let score = 0;
   for (const line of data) {
-    const stack: string[] = [];
     const result = checkLine(line);
     if (typeof result === "number") {
       score += result;

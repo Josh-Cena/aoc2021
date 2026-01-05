@@ -1,21 +1,16 @@
 export function solve(fishes: number[], days: number): void {
-  const counterToCount = Array.from({ length: 9 }, () => 0);
+  let counterToCount = Array.from({ length: 9 }, () => 0);
   for (const fish of fishes) {
     counterToCount[fish]++;
   }
   for (let day = 1; day <= days; day++) {
     const newCounterToCount = Array.from({ length: 9 }, () => 0);
-    for (const [counter, count] of counterToCount.entries()) {
-      if (counter === 0) {
-        newCounterToCount[6] += count;
-        newCounterToCount[8] += count;
-      } else {
-        newCounterToCount[counter - 1] += count;
-      }
+    for (let newCounter = 0; newCounter < 8; newCounter++) {
+      newCounterToCount[newCounter] = counterToCount[newCounter + 1];
     }
-    for (let i = 0; i <= 8; i++) {
-      counterToCount[i] = newCounterToCount[i];
-    }
+    newCounterToCount[6] += counterToCount[0];
+    newCounterToCount[8] = counterToCount[0];
+    counterToCount = newCounterToCount;
   }
   const total = counterToCount.reduce((a, b) => a + b, 0);
   console.log(total);

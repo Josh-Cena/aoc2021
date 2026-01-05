@@ -1,28 +1,26 @@
 export function solve1(data: string[]): void {
-  let gamma = "";
-  let epsilon = "";
+  let gamma = 0;
+  let epsilon = 0;
   const length = data[0].length;
   for (let i = 0; i < length; i++) {
     const counts = [0, 0];
     for (const line of data) {
       counts[parseInt(line[i], 10)]++;
     }
+    gamma <<= 1;
+    epsilon <<= 1;
     if (counts[0] > counts[1]) {
-      gamma += "0";
-      epsilon += "1";
+      epsilon |= 1;
     } else {
-      gamma += "1";
-      epsilon += "0";
+      gamma |= 1;
     }
   }
-  const gammaNum = parseInt(gamma, 2);
-  const epsilonNum = parseInt(epsilon, 2);
-  console.log(gammaNum * epsilonNum);
+  console.log(gamma * epsilon);
 }
 
 export function solve2(data: string[]): void {
-  let o2Candidates = [...data];
-  let co2Candidates = [...data];
+  let o2Candidates = data;
+  let co2Candidates = data;
   const length = data[0].length;
 
   for (let i = 0; i < length; i++) {
